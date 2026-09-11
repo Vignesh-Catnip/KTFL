@@ -57,58 +57,115 @@ async def health():
     return {'status':'ok','extraction_mode':settings.extraction_mode,'ollama_model':settings.ollama_model,'rpa_mode':settings.rpa_mode,'database':db_status,'ollama':ollama_status}
 def serialize(i):
     return {'id':i.id,'filename':i.filename,'vendor':i.vendor,'invoice_number':i.invoice_number,'invoice_date':i.invoice_date,'po_number':i.po_number,'tax_code':i.tax_code,'business_place':i.business_place,'currency':i.currency,'subtotal':i.subtotal,'tax':i.tax,'total':i.total,'confidence':i.confidence,'status':i.status,'error_message':i.error_message,'created_at':i.created_at.isoformat() if i.created_at else None,'lines':[{'id':l.id,'item':l.item,'quantity':l.quantity,'tax_code':l.tax_code,'amount':l.amount} for l in i.lines]}
-@app.post('/api/invoices/upload')
-async def upload_invoice(file: UploadFile=File(...),db:Session=Depends(get_db)):
-    stage_ctx={'endpoint':'/api/invoices/upload','method':'POST','filename_ctx':file.filename or '-'}
-    logger.info('Upload received', extra={'stage':'UPLOAD', **stage_ctx})
-    allowed_types={'application/pdf','image/png','image/jpeg','image/jpg'}
-    allowed_exts={'.pdf','.png','.jpg','.jpeg'}
-    ext=Path(file.filename or '').suffix.lower()
-    if not file.filename:
-        logger.warning('Upload rejected: missing filename', extra={'stage':'FILE_VALIDATION', **stage_ctx})
-        raise HTTPException(400,'File name is required')
+@app.post("/api/invoices/upload")
+async def upload_invoice(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    stage_ctx = {
+        "endpoint": "/api/invoices/upload",
+        "method": "POST",
+        "filename_ctx": file.filename or "-"
+    }
+    logger.info("Upload received", extra={"stage": "UPLOAD", **stage_ctx})
+
+    allowed_types = {"application/pdf", "image/png", "image/jpeg", "image/jpg"}
+    allowed_exts = {".pdf", ".png", ".jpg", ".jpeg"}
+    
+    filename = file.filename or ""
+    ext = Path(filename).suffix.lower()
+
+    if not filename:
+        logger.warning("Upload rejected: missing filename", extra={"stage": "FILE_VALIDATION", **stage_ctx})
+        raise HTTPException(400, "File name is required")
+
     if file.content_type not in allowed_types and ext not in allowed_exts:
-        logger.warning(f'Upload rejected: unsupported type (content_type={file.content_type!r}, ext={ext!r})', extra={'stage':'FILE_VALIDATION', **stage_ctx})
-        raise HTTPException(400,'Unsupported file type. Please upload PDF, JPG, JPEG, or PNG.')
-    content=await file.read()
+        logger.warning(
+            f"Upload rejected: unsupported type (content_type={file.content_type!r}, ext={ext!r})",
+            extra={"stage": "FILE_VALIDATION", **stage_ctx}
+        )
+        raise HTTPException(400, "Unsupported file type. Please upload PDF, JPG, JPEG, or PNG.")
+
+    content = await file.read()
     if not content:
-        logger.warning('Upload rejected: empty file', extra={'stage':'FILE_VALIDATION', **stage_ctx})
-        raise HTTPException(400,'Uploaded file is empty')
-    if len(content)>settings.max_file_size_mb*1024*1024:
-        logger.warning('Upload rejected: file too large', extra={'stage':'FILE_VALIDATION', **stage_ctx})
-        raise HTTPException(413,f'File exceeds {settings.max_file_size_mb} MB')
-    safe=f'{uuid.uuid4().hex}_{Path(file.filename).name}'; path=Path(settings.upload_dir)/safe; path.write_bytes(content)
+        logger.warning("Upload rejected: empty file", extra={"stage": "FILE_VALIDATION", **stage_ctx})
+        raise HTTPException(400, "Uploaded file is empty")
+
+    if len(content) > settings.max_file_size_mb * 1024 * 1024:
+        logger.warning("Upload rejected: file too large", extra={"stage": "FILE_VALIDATION", **stage_ctx})
+        raise HTTPException(413, f"File exceeds {settings.max_file_size_mb} MB")
+
+    safe_filename = f"{uuid.uuid4().hex}_{Path(filename).name}"
+    file_path = Path(settings.upload_dir) / safe_filename
+    file_path.write_bytes(content)
+
     try:
         try:
-            data=await extract_invoice(str(path))
+            # extract_invoice must support both PDF and image processing (via OCR)
+            data = await extract_invoice(str(file_path))
         except HTTPException:
             raise
         except Exception as exc:
-            logger.exception('Invoice extraction pipeline failed', extra={'stage':'INVOICE_EXTRACTION', **stage_ctx})
-            raise HTTPException(500,'Invoice extraction failed. Please try again or contact support.') from exc
-        if not data.get('invoice_number') or not data.get('vendor'):
-            logger.warning('Extraction incomplete: missing vendor/invoice_number', extra={'stage':'INVOICE_EXTRACTION', **stage_ctx})
-            raise HTTPException(422,'Vendor and invoice number could not be reliably extracted')
-        duplicate=db.scalar(select(Invoice).where(Invoice.invoice_number==data['invoice_number'],Invoice.vendor==data['vendor']))
-        if duplicate: raise HTTPException(409,f'Duplicate invoice detected. Existing invoice ID: {duplicate.id}')
-        errors=validate_extraction(type('Obj',(),data)())
+            logger.exception("Invoice extraction pipeline failed", extra={"stage": "INVOICE_EXTRACTION", **stage_ctx})
+            raise HTTPException(500, "Invoice extraction failed. Please try again or contact support.") from exc
+
+        if not data.get("invoice_number") or not data.get("vendor"):
+            logger.warning("Extraction incomplete: missing vendor/invoice_number", extra={"stage": "INVOICE_EXTRACTION", **stage_ctx})
+            raise HTTPException(422, "Vendor and invoice number could not be reliably extracted")
+
+        duplicate = db.scalar(
+            select(Invoice).where(
+                Invoice.invoice_number == data["invoice_number"],
+                Invoice.vendor == data["vendor"]
+            )
+        )
+        if duplicate:
+            raise HTTPException(409, f"Duplicate invoice detected. Existing invoice ID: {duplicate.id}")
+
+        errors = validate_extraction(type("Obj", (), data)())
+
         try:
-            inv=Invoice(filename=file.filename,vendor=data['vendor'],invoice_number=data['invoice_number'],invoice_date=data['invoice_date'],po_number=data['po_number'],tax_code=data['tax_code'],business_place=data['business_place'],currency=data['currency'],subtotal=data['subtotal'],tax=data['tax'],total=data['total'],confidence=data['confidence'],status='EXCEPTION' if errors else 'REVIEW',error_message='; '.join(errors) if errors else None)
-            db.add(inv); db.flush()
-            for l in data['lines']: db.add(InvoiceLine(invoice_id=inv.id,**l))
-            db.add(AuditLog(invoice_id=inv.id,action='UPLOAD_AND_EXTRACT',detail={'mode':settings.extraction_mode,'errors':errors}))
-            db.commit(); db.refresh(inv)
+            inv = Invoice(
+                filename=filename,
+                vendor=data["vendor"],
+                invoice_number=data["invoice_number"],
+                invoice_date=data["invoice_date"],
+                po_number=data["po_number"],
+                tax_code=data["tax_code"],
+                business_place=data["business_place"],
+                currency=data["currency"],
+                subtotal=data["subtotal"],
+                tax=data["tax"],
+                total=data["total"],
+                confidence=data["confidence"],
+                status="EXCEPTION" if errors else "REVIEW",
+                error_message="; ".join(errors) if errors else None
+            )
+            db.add(inv)
+            db.flush()
+
+            for line in data.get("lines", []):
+                db.add(InvoiceLine(invoice_id=inv.id, **line))
+
+            db.add(AuditLog(
+                invoice_id=inv.id,
+                action="UPLOAD_AND_EXTRACT",
+                detail={"mode": settings.extraction_mode, "errors": errors}
+            ))
+            db.commit()
+            db.refresh(inv)
         except HTTPException:
             raise
         except Exception as exc:
             db.rollback()
-            logger.exception('Database insertion failed', extra={'stage':'DATABASE', **stage_ctx})
-            raise HTTPException(503,'Could not save invoice. Database unavailable, please try again shortly.') from exc
-        logger.info(f'Upload processed successfully, invoice_id={inv.id}, status={inv.status}', extra={'stage':'UPLOAD', **stage_ctx})
+            logger.exception("Database insertion failed", extra={"stage": "DATABASE", **stage_ctx})
+            raise HTTPException(503, "Could not save invoice. Database unavailable, please try again shortly.") from exc
+
+        logger.info(f"Upload processed successfully, invoice_id={inv.id}, status={inv.status}", extra={"stage": "UPLOAD", **stage_ctx})
         return serialize(inv)
+
     finally:
-        try:path.unlink()
-        except OSError:pass
+        try:
+            file_path.unlink()
+        except OSError:
+            pass
 @app.get('/api/invoices')
 def list_invoices(status: str|None=Query(None),search: str|None=Query(None),db:Session=Depends(get_db)):
     q=select(Invoice).order_by(Invoice.id.desc())
