@@ -1,0 +1,2 @@
+def demo_extract(_path):
+    return {'vendor':'Bansal Steel Traders','invoice_number':'INV-88213','invoice_date':'2026-09-04','po_number':'PO-4051239','tax_code':'I3','business_place':'Plant 1000 / Sect A','currency':'INR','subtotal':151800,'tax':0,'total':151800,'confidence':0.97,'lines':[{'item':'Steel rod 12mm','quantity':200,'tax_code':'I3','amount':84000},{'item':'Steel rod 16mm','quantity':120,'tax_code':'I3','amount':63600},{'item':'Freight charges','quantity':1,'tax_code':'I0','amount':4200}]}

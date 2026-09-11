@@ -1,0 +1,2 @@
+-- Optional manual schema reference. The FastAPI app creates these tables automatically for the POC.
+-- Run against PostgreSQL if you want an explicit migration workflow.
