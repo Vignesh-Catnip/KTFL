@@ -268,3 +268,93 @@ FROM invoices
 WHERE invoices.invoice_number = %(invoice_number_1)s::VARCHAR AND invoices.vendor = %(vendor_1)s::VARCHAR]
 [parameters: {'invoice_number_1': '9043043679', 'vendor_1': 'KALYANI STEELS LIMITED'}]
 (Background on this error at: https://sqlalche.me/e/20/f405)
+2026-09-16 16:36:36,081 ERROR stage=API endpoint=/api/invoices/upload method=POST file=- logger=bfl Unhandled error
+Traceback (most recent call last):
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UndefinedColumn: column invoices.hsn_sac does not exist
+LINE 1: ...invoice_date, invoices.po_number, invoices.gstin, invoices.h...
+                                                             ^
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\starlette\routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\starlette\routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\fastapi\routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\fastapi\routing.py", line 213, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ckts00126\Desktop\KTFL\KTFL\backend\app\main.py", line 115, in upload_invoice
+    dup = db.scalar(select(Invoice).where(
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2413, in scalar
+    return self._execute_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+             ^^^^^^^^^^^^^
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+           ^^^^^
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "C:\Users\ckts00126\Desktop\KTFL\BFL_fixed (1)\BFL\backend\.venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+sqlalchemy.exc.ProgrammingError: (psycopg.errors.UndefinedColumn) column invoices.hsn_sac does not exist
+LINE 1: ...invoice_date, invoices.po_number, invoices.gstin, invoices.h...
+                                                             ^
+[SQL: SELECT invoices.id, invoices.filename, invoices.vendor, invoices.invoice_number, invoices.invoice_date, invoices.po_number, invoices.gstin, invoices.hsn_sac, invoices.vendor_code, invoices.tax_code, invoices.business_place, invoices.currency, invoices.subtotal, invoices.cgst, invoices.sgst, invoices.igst, invoices.tax, invoices.total, invoices.confidence, invoices.status, invoices.error_message, invoices.created_at, invoices.updated_at 
+FROM invoices 
+WHERE invoices.invoice_number = %(invoice_number_1)s::VARCHAR AND invoices.vendor = %(vendor_1)s::VARCHAR]
+[parameters: {'invoice_number_1': '9043043679', 'vendor_1': 'KALYANI STEELS LIMITED'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
