@@ -1,9 +1,48 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
+
 class Line(BaseModel):
-    item: str=''; quantity: float=0; tax_code: str=''; amount: float=0
+    item: str = ''
+    quantity: float = 0
+    rate: float = 0
+    tax_code: str = ''
+    amount: float = 0
+
 class Extraction(BaseModel):
-    vendor: str=''; invoice_number: str=''; invoice_date: str=''; po_number: str=''; tax_code: str=''; business_place: str=''; currency: str='INR'; subtotal: float=0; tax: float=0; total: float=0; confidence: float=0; lines: list[Line]=Field(default_factory=list)
+    vendor: str = ''
+    invoice_number: str = ''
+    invoice_date: str = ''
+    po_number: str = ''
+    gstin: str = ''
+    hsn_sac: str = ''
+    vendor_code: str = ''
+    tax_code: str = ''
+    business_place: str = ''
+    currency: str = 'INR'
+    subtotal: float = 0
+    cgst: float = 0
+    sgst: float = 0
+    igst: float = 0
+    tax: float = 0
+    total: float = 0
+    confidence: float = 0
+    lines: list[Line] = Field(default_factory=list)
+
 class ReviewUpdate(BaseModel):
-    model_config=ConfigDict(extra='forbid')
-    vendor: Optional[str]=None; invoice_number: Optional[str]=None; invoice_date: Optional[str]=None; po_number: Optional[str]=None; tax_code: Optional[str]=None; business_place: Optional[str]=None; currency: Optional[str]=None; subtotal: Optional[float]=None; tax: Optional[float]=None; total: Optional[float]=None
+    model_config = ConfigDict(extra='forbid')
+    vendor: Optional[str] = None
+    invoice_number: Optional[str] = None
+    invoice_date: Optional[str] = None
+    po_number: Optional[str] = None
+    gstin: Optional[str] = None
+    hsn_sac: Optional[str] = None
+    vendor_code: Optional[str] = None
+    tax_code: Optional[str] = None
+    business_place: Optional[str] = None
+    currency: Optional[str] = None
+    subtotal: Optional[float] = None
+    cgst: Optional[float] = None
+    sgst: Optional[float] = None
+    igst: Optional[float] = None
+    tax: Optional[float] = None
+    total: Optional[float] = None
