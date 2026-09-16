@@ -1,42 +1,32 @@
-# --- Python ---
+# Python
 .venv/
 venv/
 env/
-backend/.venv/
-backend/venv/
 __pycache__/
 *.pyc
 *.pyo
-site-packages/
 
-# --- Node ---
+# Node
 node_modules/
-frontend/node_modules/
 build/
 dist/
 .next/
 
-# --- Environment / secrets ---
-.env
-.env.*
-!.env.example
-
-# --- Logs ---
-logs/
-*.log
-
-# --- Uploaded / generated invoice files ---
+# Uploads / temp
 backend/uploads/
 uploads/
 temp/
 tmp/
 
-# --- AI models ---
+# AI models
 models/
 ollama_models/
 
-# --- IDE / OS ---
+# IDE / OS
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Keep logs tracked (for auto push error workflow)
+# logs/ is intentionally NOT ignored
