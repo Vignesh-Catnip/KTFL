@@ -18,6 +18,7 @@ from .logging_config import setup_logging
 logger = setup_logging()
 
 Base.metadata.create_all(engine)
+run_migrations()
 Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title='SAP MIRO Invoice Processing API', version='3.0.0')
